@@ -1,14 +1,20 @@
 package com.example.finalproject;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class DatabaseHandler extends SQLiteOpenHelper {
+import java.util.LinkedList;
+import java.util.List;
+
+public class DatabaseHandler extends SQLiteOpenHelper  {
     public static final int DATABASE_VERSION =1;
     public static final String DATABASE_NAME ="crypto.db";
 
@@ -61,5 +67,66 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
 
+    }
+
+    public void addCoin(String ticker,String icon, String quantity, String date, String time, String price){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_NAME_TICKER, ticker);
+        values.put(COLUMN_NAME_ICON, icon);
+        values.put(COLUMN_NAME_QUANTITY, quantity);
+        values.put(COLUMN_NAME_DATE, date);
+        values.put(COLUMN_NAME_TIME, time);
+        values.put(COLUMN_NAME_PRICE, price);
+
+        //inserting values
+        db.insert(TABLE_PORTFOLIO, null, values);
+        db.close();
+    }
+
+    public void addCoin(String ticker){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_NAME_TICKER, ticker);
+        //inserting values
+        db.insert(TABLE_FAVORITES, null, values);
+        db.close();
+    }
+
+    public List<Coin> getPortfolio() {
+        List<Coin> coins = new LinkedList<Coin>();
+
+        //build the query
+
+        String query = "SELECT * FROM " + TABLE_PORTFOLIO;
+
+        //get reference to writable DB
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(query, null);
+
+
+        //Go over each coin, build a coin and add it to the list:
+        Coin coin = null;
+
+        if(cursor.moveToFirst()){
+            do{
+                coin = new Coin();
+                coin.setTicker(cursor.getString(1));
+                coin.setIcon(cursor.getString(2));
+                coin.setQuantity(cursor.getString(3));
+                coin.setDate(cursor.getString(4));
+                coin.setTime(cursor.getString(5));
+                coin.setPrice(cursor.getString(6));
+
+                //Add coin to coins
+                coins.add(coin);
+
+            } while(cursor.moveToNext());
+        }
+        Log.d("getPortfolio", coins.toString());
+
+        //return Coins
+
+        return coins;
     }
 }
