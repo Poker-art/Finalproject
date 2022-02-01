@@ -129,4 +129,35 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
 
         return coins;
     }
+
+    public List<Coin> getFavorites(){
+        List<Coin> coins = new LinkedList<Coin>();
+
+        //Build the Query
+
+        String query = "SELECT * FROM " + TABLE_FAVORITES;
+
+        //get reference to writable DB
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(query, null);
+
+        //Go over each coin, build coon and add it to the list:
+        Coin coin = null;
+
+        if(cursor.moveToFirst()){
+           do{
+               coin = new Coin();
+               coin.setTicker(cursor.getString(1));
+
+               coins.add(coin);
+           }
+           while(cursor.moveToNext());
+        }
+        Log.d("getFavorites", coins.toString());
+
+        //return Coins
+
+        return coins;
+    }
 }
