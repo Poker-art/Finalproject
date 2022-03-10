@@ -29,7 +29,6 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     Button btnProfile, btnCamera;
-    HttpHandler myHandler = new HttpHandler(this);
     String url = "https://sandbox-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=500&convert=USD";;
     private String api_key = "a0554350-70fc-4876-a8ac-7f6b39238cc7";
 
@@ -69,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 public void onSuccess(JSONObject result){
                     Toast.makeText(getApplicationContext(), "Response: "+ result, Toast.LENGTH_LONG).show();
 
-              //do stuff here
+                    //todo: stuff here
                 }
             });
 
@@ -83,22 +82,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
-
+    //this function get JSON information from the given URL (line 33)
      public void GetCoins(final VolleyCallback callback) {
+        //creating a JSON object with the needed method (GET), the url (CoinMarketCap), and the listener for the response.
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
+            //when a response is given:
             public void onResponse(JSONObject response) {
+                //Log the response to screen
                 Log.d("Response", response.toString());
+                //If the response is "successful" (GET request worked), execute the onSuccess() function - which takes the Json object returned from the request.
                 callback.onSuccess(response);
 //                Toast.makeText(getApplicationContext(), "Response: "+ result, Toast.LENGTH_LONG).show();
+               //try to parse the value of the json response, TODO: i have some questions about this function as it seems unneeded
                 try {
                     Log.d("JSON", String.valueOf(response));
                     String Error = response.getString("httpStatus");
+                 //possibly an unneeded function (if/else are empty)
                     if (Error.equals("OK")) {
 
                     } else {
 
                     }
+                    //Catches ONLY parsing errors.
                 } catch (JSONException e) {
                     e.printStackTrace();
 
