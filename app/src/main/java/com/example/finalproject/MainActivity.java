@@ -20,18 +20,22 @@ import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    Button btnProfile, btnCamera;
-    String url = "https://sandbox-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=500&convert=USD";;
+    Button btnCamera;
+    FloatingActionButton addButton;
+    String url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=500";
     private String api_key = "a0554350-70fc-4876-a8ac-7f6b39238cc7";
-
 
 
 
@@ -43,8 +47,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        btnProfile = findViewById(R.id.btnProfile);
-        btnProfile.setOnClickListener(this);
+        addButton = findViewById(R.id.addButton);
+        addButton.setOnClickListener(this);
         btnCamera = findViewById(R.id.btnCamera);
         btnCamera.setOnClickListener(this);
 
@@ -55,9 +59,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-        if(view == btnProfile){
-            Intent profileIntent = new Intent(this,ProfileActivity.class);
-            startActivity(profileIntent);
+        if(view == addButton){
+            Intent ButtonsIntent = new Intent(this,ButtonsActivity.class);
+            startActivity(ButtonsIntent);
         }
 
         if(view == btnCamera){
@@ -66,9 +70,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             GetCoins(new VolleyCallback(){
                 @Override
                 public void onSuccess(JSONObject result){
-                    Toast.makeText(getApplicationContext(), "Response: "+ result, Toast.LENGTH_LONG).show();
+                    try {
+                        Iterator x = result.keys();
+                        JSONArray resultsArray = new JSONArray();
 
-                    //todo: stuff here
+                        while(x.hasNext()){ // Iterator that turn JSONObject to JSONArray.
+                            String key = (String) x.next();
+                            resultsArray.put(result.get(key));
+                        }
+
+                        Toast.makeText(getApplicationContext(), "Loop worked!" , Toast.LENGTH_LONG).show();
+
+                        JSONArray coinDetails = resultsArray.getJSONArray(1); // gets the JSONArray that contains the needed coins data.
+                        LinkedList<JSONObject> linkedCoins = new LinkedList<JSONObject>(); //Linked list of JSONObject coins.
+
+                        for(int i = 0;i < coinDetails.length();i++){
+                            linkedCoins.add(coinDetails.getJSONObject(i)); //Adding the coins to the linked list.
+                        }
+
+                        LinkedList<String> names = new LinkedList<String>(); //LinkedList of names of every CryptoCoin.
+
+                        for(int i = 0;i<linkedCoins.size();i++){
+                            names.add(linkedCoins.get(i).getString("name")); //Adding all the names to the LinkedList of coin names.
+                        }
+
+                        System.out.println(names); //FIXME:A system print for debugger.
+
+                    } catch (JSONException e) {
+                    Toast.makeText(getApplicationContext(), "Something went wrong" + e.toString(), Toast.LENGTH_LONG).show();
+                }
                 }
             });
 

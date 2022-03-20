@@ -23,6 +23,11 @@
             android:name=".ProfileActivity"
             android:exported="true">
         </activity>
+        <activity
+            android:name=".ButtonsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Finalproject.CustomTheme">
+        </activity>
     </application>
 
 </manifest>
