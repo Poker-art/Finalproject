@@ -20,7 +20,7 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
 
     public static final String TABLE_PORTFOLIO ="portfolio";
     public static final String KEY_ID ="_ID";
-    public static final String COLUMN_NAME_TICKER ="ticker";
+    public static final String COLUMN_NAME_NAME ="name";
     public static final String COLUMN_NAME_ICON ="icon";
     public static final String COLUMN_NAME_QUANTITY ="quantity";
     public static final String COLUMN_NAME_DATE ="date";
@@ -32,17 +32,15 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
     private static final String SQL_CREATE_TABLE_PORTFOLIO =
             "CREATE TABLE " + TABLE_PORTFOLIO + " (" +
                     KEY_ID + " INTEGER PRIMARY KEY," +
-                    COLUMN_NAME_TICKER + " TEXT," +
-                    COLUMN_NAME_ICON + " TEXT," +
+                    COLUMN_NAME_NAME + " TEXT," +
                     COLUMN_NAME_QUANTITY + " TEXT," +
                     COLUMN_NAME_DATE + " TEXT," +
-                    COLUMN_NAME_TIME + " TEXT," +
                     COLUMN_NAME_PRICE + " TEXT)";
 
     private static final String SQL_CREATE_TABLE_FAVORITES =
             "CREATE TABLE " + TABLE_FAVORITES + " (" +
                     KEY_ID + " INTEGER PRIMARY KEY," +
-                    COLUMN_NAME_TICKER + " TEXT)";
+                    COLUMN_NAME_NAME + " TEXT)";
 
     private static final String SQL_DELETE_TABLE_PORTFOLIO =
             "DROP TABLE IF EXISTS " + TABLE_PORTFOLIO;
@@ -64,19 +62,17 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
 
     }
 
+
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
-
     }
 
-    public void addCoin(String ticker,String icon, String quantity, String date, String time, String price){
+    public void addCoin(String name, String quantity, String date, String price){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(COLUMN_NAME_TICKER, ticker);
-        values.put(COLUMN_NAME_ICON, icon);
+        values.put(COLUMN_NAME_NAME, name);
         values.put(COLUMN_NAME_QUANTITY, quantity);
         values.put(COLUMN_NAME_DATE, date);
-        values.put(COLUMN_NAME_TIME, time);
         values.put(COLUMN_NAME_PRICE, price);
 
         //inserting values
@@ -84,14 +80,15 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
         db.close();
     }
 
-    public void addCoin(String ticker){
+    public void addCoin(String name){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(COLUMN_NAME_TICKER, ticker);
+        values.put(COLUMN_NAME_NAME, name);
         //inserting values
         db.insert(TABLE_FAVORITES, null, values);
         db.close();
     }
+
 
     public List<Coin> getPortfolio() {
         List<Coin> coins = new LinkedList<Coin>();
@@ -111,12 +108,12 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
         if(cursor.moveToFirst()){
             do{
                 coin = new Coin();
-                coin.setTicker(cursor.getString(1));
-                coin.setIcon(cursor.getString(2));
-                coin.setQuantity(cursor.getString(3));
-                coin.setDate(cursor.getString(4));
-                coin.setTime(cursor.getString(5));
-                coin.setPrice(cursor.getString(6));
+                coin.setName(cursor.getString(1));
+                //coin.setIcon(cursor.getString(2));
+                coin.setQuantity(cursor.getString(2));
+                coin.setDate(cursor.getString(3));
+                //coin.setTime(cursor.getString(5));
+                coin.setPrice(cursor.getString(4));
 
                 //Add coin to coins
                 coins.add(coin);
@@ -148,7 +145,7 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
         if(cursor.moveToFirst()){
            do{
                coin = new Coin();
-               coin.setTicker(cursor.getString(1));
+               coin.setName(cursor.getString(1));
 
                coins.add(coin);
            }
@@ -160,4 +157,41 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
 
         return coins;
     }
+
+    public void deleteCoinFromFavorite(String coinName) {
+
+        // on below line we are creating
+        // a variable to write our database.
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // on below line we are calling a method to delete our
+        // course and we are comparing it with our course name.
+        db.delete(TABLE_FAVORITES, "COLUMN_NAME_NAME=?", new String[]{coinName});
+        db.close();
+    }
+
+    public void deleteCoinFromPortfolio(String coinName) {
+
+        // on below line we are creating
+        // a variable to write our database.
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // on below line we are calling a method to delete our
+        // course and we are comparing it with our course name.
+        db.delete(TABLE_PORTFOLIO, "COLUMN_NAME_NAME=?", new String[]{coinName});
+        db.close();
+    }
+
+    public void deleteTablePortfolio(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("delete from " + TABLE_PORTFOLIO);
+    }
+
+    public void deleteTableFavorites(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("delete from " + TABLE_FAVORITES);
+    }
+
+
+
 }

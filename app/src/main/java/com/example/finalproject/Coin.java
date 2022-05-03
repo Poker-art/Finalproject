@@ -2,15 +2,15 @@ package com.example.finalproject;
 
 public class Coin {
 
-    protected String ticker;
+    protected String name;
     protected String icon;
     protected String quantity;
     protected String date;
     protected String time;
     protected String price;
 
-    public Coin(String ticker, String icon, String quantity, String date, String time, String price) {
-        this.ticker = ticker;
+    public Coin(String name, String icon, String quantity, String date, String time, String price) {
+        this.name = name;
         this.icon = icon;
         this.quantity = quantity;
         this.date = date;
@@ -18,15 +18,15 @@ public class Coin {
         this.price = price;
     }
 
-    public Coin(String ticker) {
-        this.ticker = ticker;
+    public Coin(String name) {
+        this.name = name;
     }
 
     public Coin() {
     }
 
-    public String getTicker() {
-        return ticker;
+    public String getName() {
+        return name;
     }
 
     public String getIcon() {
@@ -49,8 +49,8 @@ public class Coin {
         return price;
     }
 
-    public void setTicker(String ticker) {
-        this.ticker = ticker;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setIcon(String icon) {

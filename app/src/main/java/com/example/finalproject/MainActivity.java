@@ -26,6 +26,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -47,62 +48,91 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        addButton = findViewById(R.id.addButton);
-        addButton.setOnClickListener(this);
         btnCamera = findViewById(R.id.btnCamera);
         btnCamera.setOnClickListener(this);
-
-
 
 
     }
 
     @Override
     public void onClick(View view) {
-        if(view == addButton){
-            Intent ButtonsIntent = new Intent(this,ButtonsActivity.class);
-            startActivity(ButtonsIntent);
-        }
+
 
         if(view == btnCamera){
-
+            LinkedList<String> names = new LinkedList<String>();
+            LinkedList<String> prices = new LinkedList<String>();
+            //LinkedList of names of every CryptoCoin.
             //The function implements a VolleyCallBack which is called on a successful response through the VolleyCallback interface.
-            GetCoins(new VolleyCallback(){
-                @Override
-                public void onSuccess(JSONObject result){
-                    try {
-                        Iterator x = result.keys();
-                        JSONArray resultsArray = new JSONArray();
 
-                        while(x.hasNext()){ // Iterator that turn JSONObject to JSONArray.
-                            String key = (String) x.next();
-                            resultsArray.put(result.get(key));
+                GetCoins(new VolleyCallback() {
+                    @Override
+                    public void onSuccess(JSONObject result) {
+                        try {
+                            Iterator x = result.keys();
+                            JSONArray resultsArray = new JSONArray();
+
+                            while (x.hasNext()) { // Iterator that turn JSONObject to JSONArray.
+                                String key = (String) x.next();
+                                resultsArray.put(result.get(key));
+                            }
+
+                            Toast.makeText(getApplicationContext(), "Welcome!", Toast.LENGTH_LONG).show();
+
+                            JSONArray coinDetails = resultsArray.getJSONArray(1); // gets the JSONArray that contains the needed coins data.
+
+                            LinkedList<JSONObject> linkedCoins = new LinkedList<JSONObject>(); //Linked list of JSONObject coins.
+
+                            for (int i = 0; i < coinDetails.length(); i++) {
+                                linkedCoins.add(coinDetails.getJSONObject(i)); //Adding the coins to the linked list.
+                            }
+
+
+                            for (int i = 0; i < linkedCoins.size(); i++) {
+                                names.add(linkedCoins.get(i).getString("name")); //Adding all the names to the LinkedList of coin names.
+                                prices.add(linkedCoins.get(i).getJSONObject("quote").getJSONObject("USD").getString("price"));
+                            }
+
+
+                            System.out.println(names); //FIXME:A system print for debugger.
+
+                        } catch (JSONException e) {
+                            Toast.makeText(getApplicationContext(), "Something went wrong" + e.toString(), Toast.LENGTH_LONG).show();
                         }
 
-                        Toast.makeText(getApplicationContext(), "Loop worked!" , Toast.LENGTH_LONG).show();
+                        startButtons(names, prices);
+                    }
 
-                        JSONArray coinDetails = resultsArray.getJSONArray(1); // gets the JSONArray that contains the needed coins data.
-                        LinkedList<JSONObject> linkedCoins = new LinkedList<JSONObject>(); //Linked list of JSONObject coins.
 
-                        for(int i = 0;i < coinDetails.length();i++){
-                            linkedCoins.add(coinDetails.getJSONObject(i)); //Adding the coins to the linked list.
-                        }
 
-                        LinkedList<String> names = new LinkedList<String>(); //LinkedList of names of every CryptoCoin.
 
-                        for(int i = 0;i<linkedCoins.size();i++){
-                            names.add(linkedCoins.get(i).getString("name")); //Adding all the names to the LinkedList of coin names.
-                        }
+                });
 
-                        System.out.println(names); //FIXME:A system print for debugger.
-
-                    } catch (JSONException e) {
-                    Toast.makeText(getApplicationContext(), "Something went wrong" + e.toString(), Toast.LENGTH_LONG).show();
-                }
-                }
-            });
-
+            System.out.println("lololk");
+            //FIXME: get intent values (and start intent) ONLY when all of onSuccess is done.
+            /*
+            *String[] arrayNames = names.toArray(new String[names.size()]);
+            *if(arrayNames != null){
+            *    Intent ButtonsIntent = new Intent(this,ButtonsActivity.class);
+            *    ButtonsIntent.putExtra("names", arrayNames);
+            *    startActivity(ButtonsIntent);
+            *}
+            * */
         }
+    }
+
+    public void startButtons(LinkedList<String> names, LinkedList<String> prices){
+
+        String[] arraynames = names.toArray(new String[names.size()]);
+        String[] arrayPrices = prices.toArray(new String[prices.size()]);
+
+        Intent ButtonsIntent = new Intent(this,ButtonsActivity.class);
+
+        ButtonsIntent.putExtra("names",arraynames);
+        ButtonsIntent.putExtra("prices",arrayPrices);
+
+        startActivity(ButtonsIntent);
+        overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
+
     }
 
     //interface for receiving the Volley successful response
@@ -112,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
-    //this function get JSON information from the given URL (line 33)
+    //this function gets JSON information from the given URL (line 33)
      public void GetCoins(final VolleyCallback callback) {
         //creating a JSON object with the needed method (GET), the url (CoinMarketCap), and the listener for the response.
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
