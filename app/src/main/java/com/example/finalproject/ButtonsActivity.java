@@ -1,10 +1,13 @@
 package com.example.finalproject;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.Html;
 import android.text.InputType;
 import android.util.DisplayMetrics;
@@ -46,6 +49,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -65,33 +73,40 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
     private TextView t1;
     private SwipeRefreshLayout SL;
 
+    String[] namesArray = null;
+    String[] pricesArray = null;
+
     String url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=500";
     private String api_key = "a0554350-70fc-4876-a8ac-7f6b39238cc7";
     DatabaseHandler coinDatabase = new DatabaseHandler(ButtonsActivity.this);
+
+    SharedPreferences prefs = null;
+
 
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
-            case R.id.item1:
-                Intent mainIntent = new Intent(this, MainActivity.class);
-                startActivity(mainIntent);
+            case R.id.btnPortfolio:
+                Intent portfolioIntent = new Intent(this, PortfolioActivity.class);
+                startActivity(portfolioIntent);
+                overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
                 break;
 
-            case R.id.item2:
-                if(getCallingActivity() == this.getCallingActivity()){
+            case R.id.btnCoinMenu:
                     Toast.makeText(getApplicationContext(), "Already In the Coins Screen", Toast.LENGTH_LONG).show();
-                    break;
-                }
-                Intent buttonsIntent = new Intent(this, ButtonsActivity.class);
-                startActivity(buttonsIntent);
                 break;
 
-            case R.id.item3:
+            case R.id.btnFavorites:
+                Intent favoritesIntent = new Intent(this, FavoritesActivity.class);
+                startActivity(favoritesIntent);
+                overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -103,35 +118,100 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_buttons);
 
-        Bundle bundle = getIntent().getExtras();
-        String[] namesArray = bundle.getStringArray("names");
-        String[] pricesArray = bundle.getStringArray("prices");
+        LinkedList<String> names = new LinkedList<String>();
+        LinkedList<String> prices = new LinkedList<String>();
+        //LinkedList of names of every CryptoCoin.
+        //The function implements a VolleyCallBack which is called on a successful response through the VolleyCallback interface.
+
+        GetCoins(new VolleyCallback() {
+            @Override
+            public void onSuccess(JSONObject result) {
+                try {
+                    Iterator x = result.keys();
+                    JSONArray resultsArray = new JSONArray();
+
+                    while (x.hasNext()) { // Iterator that turn JSONObject to JSONArray.
+                        String key = (String) x.next();
+                        resultsArray.put(result.get(key));
+                    }
+
+                    Toast.makeText(getApplicationContext(), "Welcome!", Toast.LENGTH_LONG).show();
+
+                    JSONArray coinDetails = resultsArray.getJSONArray(1); // gets the JSONArray that contains the needed coins data.
+
+                    LinkedList<JSONObject> linkedCoins = new LinkedList<JSONObject>(); //Linked list of JSONObject coins.
+
+                    for (int i = 0; i < coinDetails.length(); i++) {
+                        linkedCoins.add(coinDetails.getJSONObject(i)); //Adding the coins to the linked list.
+                    }
 
 
-        SL = findViewById(R.id.swiperefresh);
-        SL.setOnRefreshListener(ButtonsActivity.this);
-        LL = findViewById(R.id.linlay1);
+                    for (int i = 0; i < linkedCoins.size(); i++) {
+                        names.add(linkedCoins.get(i).getString("name")); //Adding all the names to the LinkedList of coin names.
+                        prices.add(linkedCoins.get(i).getJSONObject("quote").getJSONObject("USD").getString("price"));
+                    }
 
+                    SL = findViewById(R.id.swiperefresh);
+                    SL.setOnRefreshListener(ButtonsActivity.this);
+                    LL = findViewById(R.id.linlay1);
+
+                    namesArray = names.toArray(new String[names.size()]);
+                    pricesArray = prices.toArray(new String[prices.size()]);
+                    for (int i = 0;i<500;i++) {
+
+                        t1 = new TextView(ButtonsActivity.this);
+                        b1 = new Button(ButtonsActivity.this);
+                        b1.setId(i);
+                        t1.setText(pricesArray[i]);
+                        t1.setElegantTextHeight(true);
+                        t1.setTextColor(Color.parseColor("#FFBB86FC"));
+                        b1.setText(namesArray[i] + "   " + t1.getText());
+                        b1.setGravity(Gravity.LEFT);
+                        b1.setTag(1);
+                        LL.addView(b1);
+                        b1.setOnClickListener(ButtonsActivity.this);
+                    }
+
+                    prefs = getSharedPreferences("shared preferences", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit();
+
+                    StringBuilder sbNames = new StringBuilder();
+                    for (int i = 0;i< namesArray.length;i++){
+                        sbNames.append(namesArray[i]).append(",");
+                    }
+
+                    editor.putString("names",sbNames.toString());
+
+                    StringBuilder sbPrices = new StringBuilder();
+                    for (int i = 0;i< pricesArray.length;i++){
+                        sbPrices.append(pricesArray[i]).append(",");
+                    }
+
+                    editor.putString("prices",sbPrices.toString());
+                    //editor.apply();
+                    System.out.println(names); //FIXME:A system print for debugger.
+
+                } catch (JSONException e) {
+                    Toast.makeText(getApplicationContext(), "Something went wrong" + e.toString(), Toast.LENGTH_LONG).show();
+                }
+
+            }
+
+
+
+
+        });
+
+
+        //coinDatabase.deleteTablePortfolio();
+        //coinDatabase.deleteTableFavorites();
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        for (int i = 0;i<500;i++) {
-
-            t1 = new TextView(ButtonsActivity.this);
-            b1 = new Button(ButtonsActivity.this);
-            b1.setId(i);
-            t1.setText(pricesArray[i]);
-            t1.setElegantTextHeight(true);
-            t1.setTextColor(Color.parseColor("#FFBB86FC"));
-            b1.setText(namesArray[i] + "   " + t1.getText());
-            b1.setGravity(Gravity.LEFT);
-            b1.setTag(1);
-            LL.addView(b1);
-            b1.setOnClickListener(this);
-        }
     }
 
 
@@ -146,7 +226,22 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
 
                     alertDialogBuilder.setTitle("Add Currency?")
                             .setMessage("Add to Portfolio/Favorites")
-                            .setPositiveButton("Favorites", null)
+                            .setPositiveButton("Favorites", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    String name = coinButton.getText().toString().replaceAll("\\d+(\\.\\d+)?", "");
+                                    name = name.substring(0, name.length() - 2);
+                                    boolean isUpdated = coinDatabase.updateData(name);
+                                    if (isUpdated) {
+                                        Toast.makeText(getApplicationContext(), "Coin is already in the Favorites Directory!", Toast.LENGTH_LONG).show();
+                                        return;
+                                    } else {
+                                        coinDatabase.addCoin(name);
+                                        Toast.makeText(getApplicationContext(), "Added to Favorites! " + coinDatabase.getFavorites().get(0), Toast.LENGTH_SHORT).show();
+
+                                    }
+                                }
+                            })
                             .setNegativeButton("Portfolio",null)
 
                             .setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
@@ -159,17 +254,6 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
                     alertDialog.show();
 
 
-                    Button favoritesButton = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-                    favoritesButton.setOnClickListener(new View.OnClickListener() {
-
-                        @Override
-                        public void onClick(View view) {
-                            String name = coinButton.getText().toString().replaceAll("\\d+(\\.\\d+)?","");
-                            name = name.substring(0, name.length()-2);
-                            coinDatabase.addCoin(name);
-                            Toast.makeText(getApplicationContext(), "Added to Favorites! " + coinDatabase.getFavorites().get(0), Toast.LENGTH_SHORT).show();
-                        }
-                    });
 
 
                     Button portfolioButton = alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE);
@@ -210,14 +294,30 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
                             save.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View view) {
+
                                     String amountData = amountBox.getText().toString();
                                     String dateData = dateBox.getText().toString();
-
                                     String priceData = priceBox.getText().toString();
 
-                                    coinDatabase.addCoin(name,amountData,dateData,priceData);
+                                    DateValidator validator = new DateValidatorUsingDateFormat("dd/MM/YYYY");
+                                    if(amountData.length() == 0 || dateData.length() == 0 || priceData.length() == 0) {
+                                        Toast.makeText(getApplicationContext(), "Please enter a valid data arguments for all text inputs, with a date format of: DD/MM/YYYY", Toast.LENGTH_LONG).show();
+                                        return;
+                                    } else if (Integer.parseInt(amountData) <= 0 || !validator.isValid(dateData) || Integer.parseInt(priceData) <= 0) {
+                                        Toast.makeText(getApplicationContext(), "Please enter a valid data arguments for all text inputs, with a date format of: DD/MM/YYYY", Toast.LENGTH_LONG).show();
+                                        return;
+                                    }
 
-                                    Toast.makeText(getApplicationContext(),coinDatabase.getPortfolio().get(1).getDate(), Toast.LENGTH_LONG).show();
+                                    boolean overAllGainLoss = coinDatabase.updateData(name,amountData,dateData,priceData);
+                                    if(overAllGainLoss){
+                                        Toast.makeText(getApplicationContext(),"Updated amount bought of " + name, Toast.LENGTH_LONG).show();
+                                    }
+                                    else{
+                                        coinDatabase.addCoin(name,amountData,dateData,priceData);
+                                        Toast.makeText(getApplicationContext(),"Added "+coinDatabase.getPortfolio().get(0).getName(), Toast.LENGTH_LONG).show();
+
+                                    }
+
                                 }
                             });
                             layout.addView(save);
@@ -241,6 +341,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
 
 
 
+
     @Override
     public void onRefresh() {
         LinkedList<String> prices = new LinkedList<String>();
@@ -249,7 +350,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
         //LinkedList of names of every CryptoCoin.
         //The function implements a VolleyCallBack which is called on a successful response through the VolleyCallback interface.
 
-        GetCoins(new MainActivity.VolleyCallback() {
+        GetCoins(new VolleyCallback() {
             @Override
             public void onSuccess(JSONObject result) {
                 try {
@@ -279,6 +380,9 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
                     }
 
 
+
+
+
                     System.out.println(prices); //FIXME:A system print for debugger.
 
                 } catch (JSONException e) {
@@ -286,18 +390,37 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
                 }
 
                 String[] arrayPrices = prices.toArray(new String[prices.size()]);
-                String[] arraynames = names.toArray(new String[names.size()]);
+                String[] arrayNames = names.toArray(new String[names.size()]);
 
                 LL.removeAllViews();
                 for (int i = 0;i < 500;i++){
                     b1 = new Button(ButtonsActivity.this);
                     String price = arrayPrices[i];
-                    b1.setText(arraynames[i] + "     " + price);
+                    b1.setText(arrayNames[i] + "   " + price);
                     b1.setGravity(Gravity.LEFT);
                     b1.setTag(1);
+                    b1.setId(i);
                     LL.addView(b1);
                     b1.setOnClickListener(ButtonsActivity.this);
                 }
+
+                prefs = getSharedPreferences("shared preferences", MODE_PRIVATE);
+                SharedPreferences.Editor editor = prefs.edit();
+
+                StringBuilder sbNames = new StringBuilder();
+                for (int i = 0;i< arrayNames.length;i++){
+                    sbNames.append(arrayNames[i]).append(",");
+                }
+
+                editor.putString("names",sbNames.toString());
+
+                StringBuilder sbPrices = new StringBuilder();
+                for (int i = 0;i< arrayPrices.length;i++){
+                    sbPrices.append(arrayPrices[i]).append(",");
+                }
+
+                editor.putString("prices",sbPrices.toString());
+                //editor.apply();
 
                 SL.setRefreshing(false);
             }
@@ -307,7 +430,12 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
 
     }
 
-    public void GetCoins(final MainActivity.VolleyCallback callback) {
+    //interface for receiving the Volley successful response
+    public interface VolleyCallback{
+        void onSuccess(JSONObject result);
+    }
+
+    public void GetCoins(final VolleyCallback callback) {
         //creating a JSON object with the needed method (GET), the url (CoinMarketCap), and the listener for the response.
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, url, null, new com.android.volley.Response.Listener<JSONObject>() {
             @Override
@@ -364,6 +492,32 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
     private String getColoredSpanned(String text, String color) {
         String input = "<font color=" + color + ">" + text + "</font>";
         return input;
+    }
+
+
+
+    public interface DateValidator {
+        boolean isValid(String dateStr);
+    }
+
+    public class DateValidatorUsingDateFormat implements DateValidator {
+        private String dateFormat;
+
+        public DateValidatorUsingDateFormat(String dateFormat) {
+            this.dateFormat = dateFormat;
+        }
+
+        @Override
+        public boolean isValid(String dateStr) {
+            DateFormat sdf = new SimpleDateFormat(this.dateFormat);
+            sdf.setLenient(false);
+            try {
+                sdf.parse(dateStr);
+            } catch (ParseException e) {
+                return false;
+            }
+            return true;
+        }
     }
 }
 

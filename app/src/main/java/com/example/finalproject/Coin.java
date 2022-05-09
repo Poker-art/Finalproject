@@ -8,6 +8,7 @@ public class Coin {
     protected String date;
     protected String time;
     protected String price;
+    protected String profit;
 
     public Coin(String name, String icon, String quantity, String date, String time, String price) {
         this.name = name;
@@ -16,6 +17,7 @@ public class Coin {
         this.date = date;
         this.time = time;
         this.price = price;
+        this.profit = profit;
     }
 
     public Coin(String name) {
@@ -41,8 +43,8 @@ public class Coin {
         return date;
     }
 
-    public String getTime() {
-        return time;
+    public String getProfit() {
+        return profit;
     }
 
     public String getPrice() {
@@ -65,8 +67,8 @@ public class Coin {
         this.date = date;
     }
 
-    public void setTime(String time) {
-        this.time = time;
+    public void setProfit(String profit) {
+        this.profit = profit;
     }
 
     public void setPrice(String price) {

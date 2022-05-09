@@ -3,19 +3,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
 
-    <item android:id="@+id/item1"
+    <item android:id="@+id/btnPortfolio"
         android:icon="@drawable/ic_icon"
-        android:title="Main"
+        android:title="Wallet"
         app:showAsAction="never">
     </item>
 
-    <item android:id="@+id/item2"
+    <item android:id="@+id/btnCoinMenu"
         android:title="Coins Menu"
         app:showAsAction="never">
     </item>
 
-    <item android:id="@+id/item3"
-        android:title="Profile"
+    <item android:id="@+id/btnFavorites"
+        android:title="Favorites"
         app:showAsAction="never">
     </item>
 </menu>

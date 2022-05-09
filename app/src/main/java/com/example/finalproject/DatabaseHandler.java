@@ -2,11 +2,13 @@ package com.example.finalproject;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,7 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class DatabaseHandler extends SQLiteOpenHelper  {
-    public static final int DATABASE_VERSION =1;
+    public static final int DATABASE_VERSION =2;
     public static final String DATABASE_NAME ="crypto.db";
 
     public static final String TABLE_PORTFOLIO ="portfolio";
@@ -24,8 +26,8 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
     public static final String COLUMN_NAME_ICON ="icon";
     public static final String COLUMN_NAME_QUANTITY ="quantity";
     public static final String COLUMN_NAME_DATE ="date";
-    public static final String COLUMN_NAME_TIME ="time";
-    public static final String COLUMN_NAME_PRICE ="PRICE";
+    public static final String COLUMN_NAME_PROFIT ="profit";
+    public static final String COLUMN_NAME_PRICE ="price";
 
     public static final String TABLE_FAVORITES ="favorites";
 
@@ -35,7 +37,8 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
                     COLUMN_NAME_NAME + " TEXT," +
                     COLUMN_NAME_QUANTITY + " TEXT," +
                     COLUMN_NAME_DATE + " TEXT," +
-                    COLUMN_NAME_PRICE + " TEXT)";
+                    COLUMN_NAME_PRICE + " TEXT," +
+                    COLUMN_NAME_PROFIT + " TEXT)";
 
     private static final String SQL_CREATE_TABLE_FAVORITES =
             "CREATE TABLE " + TABLE_FAVORITES + " (" +
@@ -65,16 +68,22 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
 
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+        sqLiteDatabase.execSQL(SQL_DELETE_TABLE_FAVORITES);
+        sqLiteDatabase.execSQL(SQL_DELETE_TABLE_PORTFOLIO);
+        onCreate(sqLiteDatabase);
+
     }
 
     public void addCoin(String name, String quantity, String date, String price){
+        name = name.trim();
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_NAME_NAME, name);
         values.put(COLUMN_NAME_QUANTITY, quantity);
         values.put(COLUMN_NAME_DATE, date);
         values.put(COLUMN_NAME_PRICE, price);
-
+        String profit = "0";
+        values.put(COLUMN_NAME_PROFIT,profit);
         //inserting values
         db.insert(TABLE_PORTFOLIO, null, values);
         db.close();
@@ -84,9 +93,10 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_NAME_NAME, name);
-        //inserting values
         db.insert(TABLE_FAVORITES, null, values);
         db.close();
+        //inserting values
+
     }
 
 
@@ -109,12 +119,10 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
             do{
                 coin = new Coin();
                 coin.setName(cursor.getString(1));
-                //coin.setIcon(cursor.getString(2));
                 coin.setQuantity(cursor.getString(2));
                 coin.setDate(cursor.getString(3));
-                //coin.setTime(cursor.getString(5));
                 coin.setPrice(cursor.getString(4));
-
+                coin.setProfit(cursor.getString(5));
                 //Add coin to coins
                 coins.add(coin);
 
@@ -190,6 +198,54 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
     public void deleteTableFavorites(){
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("delete from " + TABLE_FAVORITES);
+    }
+
+    public boolean updateData(String name){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COLUMN_NAME_NAME, name);
+        int i = db.update(TABLE_FAVORITES, contentValues,"name = ?",new String[]{name});
+        if(i == 0){
+            return false;
+        }
+        return true;
+    }
+
+    public boolean updateData(String name, String newAmount,String date, String newPrice){
+        name = name.trim();
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COLUMN_NAME_NAME,name);
+        //Get current amount String
+
+
+        int i = db.update(TABLE_PORTFOLIO,contentValues,"name = ?",new String[]{name});
+        if(i == 0){
+            return false; //insert instead
+        }
+
+        String GetAmount = "select "+ COLUMN_NAME_QUANTITY+","+COLUMN_NAME_PRICE+" from " + TABLE_PORTFOLIO + " where " + COLUMN_NAME_NAME + " = '" + name+"'";
+        Cursor c1 = db.rawQuery(GetAmount, null); //get numeric value from c1(0), add new amount, change new amount to string
+        c1.moveToFirst();
+
+        int currentAmount = Integer.parseInt(c1.getString(0));
+        int currentPrice = Integer.parseInt(c1.getString(1));
+        ContentValues cv = new ContentValues();
+        int joinedAmountInt = (Integer.parseInt(newAmount)+currentAmount);
+        String joinedAmountStr = String.valueOf(joinedAmountInt);
+
+        int coinPriceChanged =  currentPrice - Integer.parseInt(newPrice);
+        double overAllgainLoss = (((double) coinPriceChanged/ (double) currentPrice)*100);
+
+        cv.put(COLUMN_NAME_QUANTITY,joinedAmountStr);
+        cv.put(COLUMN_NAME_PRICE,newPrice);
+        cv.put(COLUMN_NAME_DATE,date);
+        cv.put(COLUMN_NAME_PROFIT,overAllgainLoss);
+        db.update(TABLE_PORTFOLIO,cv,"name = ?",new String[]{name});
+        //FIXME: need to update the data correctly!!!
+
+
+        return true;
     }
 
 
