@@ -4,18 +4,20 @@
 
 
     <item android:id="@+id/btnPortfolio"
-        android:icon="@drawable/ic_icon"
+        android:icon="@drawable/ic_baseline_attach_money_24"
         android:title="Wallet"
-        app:showAsAction="never">
+        >
     </item>
 
     <item android:id="@+id/btnCoinMenu"
+        android:icon="@drawable/ic_baseline_show_chart_24"
         android:title="Coins Menu"
-        app:showAsAction="never">
+        >
     </item>
 
     <item android:id="@+id/btnFavorites"
+        android:icon="@drawable/ic_baseline_bookmarks_24"
         android:title="Favorites"
-        app:showAsAction="never">
+        >
     </item>
 </menu>

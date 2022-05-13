@@ -17,7 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class DatabaseHandler extends SQLiteOpenHelper  {
-    public static final int DATABASE_VERSION =2;
+    public static final int DATABASE_VERSION =3;
     public static final String DATABASE_NAME ="crypto.db";
 
     public static final String TABLE_PORTFOLIO ="portfolio";
@@ -43,7 +43,8 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
     private static final String SQL_CREATE_TABLE_FAVORITES =
             "CREATE TABLE " + TABLE_FAVORITES + " (" +
                     KEY_ID + " INTEGER PRIMARY KEY," +
-                    COLUMN_NAME_NAME + " TEXT)";
+                    COLUMN_NAME_NAME + " TEXT," +
+                    COLUMN_NAME_PRICE + " TEXT)";
 
     private static final String SQL_DELETE_TABLE_PORTFOLIO =
             "DROP TABLE IF EXISTS " + TABLE_PORTFOLIO;
@@ -89,10 +90,11 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
         db.close();
     }
 
-    public void addCoin(String name){
+    public void addCoin(String name, String price){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_NAME_NAME, name);
+        values.put(COLUMN_NAME_PRICE,price);
         db.insert(TABLE_FAVORITES, null, values);
         db.close();
         //inserting values
@@ -154,6 +156,7 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
            do{
                coin = new Coin();
                coin.setName(cursor.getString(1));
+               coin.setPrice(cursor.getString(2));
 
                coins.add(coin);
            }
@@ -201,6 +204,7 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
     }
 
     public boolean updateData(String name){
+        name = name.trim();
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COLUMN_NAME_NAME, name);
@@ -246,6 +250,12 @@ public class DatabaseHandler extends SQLiteOpenHelper  {
 
 
         return true;
+    }
+
+    public Integer deleteData(String name){
+        SQLiteDatabase db = this.getWritableDatabase();
+        name = name.trim();
+        return db.delete(TABLE_FAVORITES,"name = ?",new String[]{name});
     }
 
 

@@ -17,6 +17,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
@@ -43,6 +44,9 @@ import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.navigation.NavigationBarView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -68,6 +72,7 @@ import okio.BufferedSink;
 
 public class ButtonsActivity extends AppCompatActivity implements View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
     private LinearLayout LL;
+    BottomNavigationView bottomNavigationView;
 
     private Button b1;
     private TextView t1;
@@ -122,6 +127,34 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_buttons);
 
+        bottomNavigationView = findViewById(R.id.bottomNavigator);
+        bottomNavigationView.setSelectedItemId(R.id.btnCoinMenu);
+
+        bottomNavigationView.setClipToOutline(true);
+        bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()){
+                    case R.id.btnPortfolio:
+                        Intent portfolioIntent = new Intent(getApplicationContext(), PortfolioActivity.class);
+                        startActivity(portfolioIntent);
+                        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+                        break;
+
+                    case R.id.btnCoinMenu:
+                        Toast.makeText(getApplicationContext(), "Already In the Coins Screen", Toast.LENGTH_LONG).show();
+                        break;
+
+                    case R.id.btnFavorites:
+                        Intent favoritesIntent = new Intent(getApplicationContext(), FavoritesActivity.class);
+                        startActivity(favoritesIntent);
+                        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+                        break;
+                }
+                return false;
+            }
+        });
+
         LinkedList<String> names = new LinkedList<String>();
         LinkedList<String> prices = new LinkedList<String>();
         //LinkedList of names of every CryptoCoin.
@@ -172,7 +205,11 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
                         b1.setText(namesArray[i] + "   " + t1.getText());
                         b1.setGravity(Gravity.LEFT);
                         b1.setTag(1);
-                        LL.addView(b1);
+                        ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) LL.getLayoutParams();
+                        params.setMargins(10,10,10,5);
+                        b1.setBackgroundResource(R.drawable.custom_button2);
+                        b1.setTextColor(Color.WHITE);
+                        LL.addView(b1,params);
                         b1.setOnClickListener(ButtonsActivity.this);
                     }
 
@@ -209,8 +246,6 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
 
         //coinDatabase.deleteTablePortfolio();
         //coinDatabase.deleteTableFavorites();
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
     }
 
@@ -222,21 +257,25 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
         switch (view.getId()){
                 default:
 
-                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                    MaterialAlertDialogBuilder alertDialogBuilder = new MaterialAlertDialogBuilder(this);
 
                     alertDialogBuilder.setTitle("Add Currency?")
                             .setMessage("Add to Portfolio/Favorites")
+                            .setIcon(R.drawable.ic_baseline_bookmarks_24)
+                            .setBackground(getDrawable(R.drawable.alert_dialog_remove))
                             .setPositiveButton("Favorites", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                     String name = coinButton.getText().toString().replaceAll("\\d+(\\.\\d+)?", "");
+                                    String price = coinButton.getText().toString().replaceAll("[^0-9.]", "");
                                     name = name.substring(0, name.length() - 2);
+                                    name = name.trim();
                                     boolean isUpdated = coinDatabase.updateData(name);
                                     if (isUpdated) {
                                         Toast.makeText(getApplicationContext(), "Coin is already in the Favorites Directory!", Toast.LENGTH_LONG).show();
                                         return;
                                     } else {
-                                        coinDatabase.addCoin(name);
+                                        coinDatabase.addCoin(name, price);
                                         Toast.makeText(getApplicationContext(), "Added to Favorites! " + coinDatabase.getFavorites().get(0), Toast.LENGTH_SHORT).show();
 
                                     }
@@ -244,7 +283,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
                             })
                             .setNegativeButton("Portfolio",null)
 
-                            .setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                            .setNeutralButton("Dismiss", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                 }
@@ -264,7 +303,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
 
                             String name = coinButton.getText().toString().replaceAll("\\d+(\\.\\d+)?","");
 
-                            AlertDialog.Builder walletDialogBuilder = new AlertDialog.Builder(ButtonsActivity.this);
+                            MaterialAlertDialogBuilder walletDialogBuilder = new MaterialAlertDialogBuilder(ButtonsActivity.this);
                             Context context = getApplicationContext();
 
                             LinearLayout layout = new LinearLayout(context);
@@ -314,7 +353,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
                                     }
                                     else{
                                         coinDatabase.addCoin(name,amountData,dateData,priceData);
-                                        Toast.makeText(getApplicationContext(),"Added "+coinDatabase.getPortfolio().get(0).getName(), Toast.LENGTH_LONG).show();
+                                        Toast.makeText(getApplicationContext(),"Added "+ name, Toast.LENGTH_LONG).show();
 
                                     }
 
@@ -324,6 +363,8 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
 
 
                             walletDialogBuilder.setView(layout);
+                            walletDialogBuilder.setBackground(getDrawable(R.drawable.alert_dialog_remove));
+                            walletDialogBuilder.setIcon(R.drawable.ic_baseline_account_balance_wallet_24);
                             AlertDialog walletDialog = walletDialogBuilder.create();
                             walletDialog.show();
 
@@ -362,7 +403,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
                         resultsArray.put(result.get(key));
                     }
 
-                    Toast.makeText(getApplicationContext(), "Loop worked!", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(getApplicationContext(), "Loop worked!", Toast.LENGTH_LONG).show();
 
                     JSONArray coinDetails = resultsArray.getJSONArray(1); // gets the JSONArray that contains the needed coins data.
 
@@ -400,7 +441,11 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
                     b1.setGravity(Gravity.LEFT);
                     b1.setTag(1);
                     b1.setId(i);
-                    LL.addView(b1);
+                    ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) LL.getLayoutParams();
+                    params.setMargins(10,10,10,5);
+                    b1.setBackgroundResource(R.drawable.custom_button2);
+                    b1.setTextColor(Color.WHITE);
+                    LL.addView(b1,params);
                     b1.setOnClickListener(ButtonsActivity.this);
                 }
 

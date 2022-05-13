@@ -1,14 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="@drawable/backgroundfavorites">
 
-    <include
-        layout="@layout/toolbar"
-        android:id="@+id/toolbar"></include>
 
-        <ScrollView
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/swiperefresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+
+        <androidx.core.widget.NestedScrollView
             android:id="@+id/scrollView1"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
@@ -18,13 +25,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-                <LinearLayout
-                    android:id="@+id/horlay1"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal">
-
-                </LinearLayout>
             </LinearLayout>
-        </ScrollView>
-</LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/bottomNavigator"
+        app:itemTextColor="@drawable/selector"
+        app:itemIconTint="@drawable/selector"
+        app:menu="@menu/example_menu"
+        android:layout_gravity="bottom"
+        android:layout_margin="40dp"
+        android:background="@drawable/nav_background_curved"
+        app:layout_behavior="@string/hide_bottom_view_on_scroll_behavior"
+        >
+    </com.google.android.material.bottomnavigation.BottomNavigationView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

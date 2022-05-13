@@ -7,15 +7,20 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationBarView;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -24,28 +29,8 @@ public class PortfolioActivity extends AppCompatActivity implements View.OnClick
     List<Coin> coins = null;
     Button b1;
     LinearLayout LL;
+    BottomNavigationView bottomNavigationView;
 
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()){
-            case R.id.btnPortfolio:
-                Toast.makeText(getApplicationContext(), "Already In the Portfolio Screen", Toast.LENGTH_LONG).show();
-                break;
-
-            case R.id.btnCoinMenu:
-                Intent coinsIntent = new Intent(this, ButtonsActivity.class);
-                startActivity(coinsIntent);
-                overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
-                break;
-
-            case R.id.btnFavorites:
-                Intent favoritesIntent = new Intent(this, FavoritesActivity.class);
-                startActivity(favoritesIntent);
-                overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
-                break;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -60,8 +45,34 @@ public class PortfolioActivity extends AppCompatActivity implements View.OnClick
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_portfolio);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        bottomNavigationView = findViewById(R.id.bottomNavigator);
+        bottomNavigationView.setSelectedItemId(R.id.btnPortfolio);
+        bottomNavigationView.setClipToOutline(true);
+
+        bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.btnPortfolio:
+                        Toast.makeText(getApplicationContext(), "Already In the Portfolio Screen", Toast.LENGTH_LONG).show();
+                        break;
+
+                    case R.id.btnCoinMenu:
+                        Intent coinsIntent = new Intent(getApplicationContext(), ButtonsActivity.class);
+                        startActivity(coinsIntent);
+                        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+                        break;
+
+                    case R.id.btnFavorites:
+                        Intent favoritesIntent = new Intent(getApplicationContext(), FavoritesActivity.class);
+                        startActivity(favoritesIntent);
+                        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+                        break;
+                }
+                return false;
+            }
+        });
+
 
         DatabaseHandler dbHandler = new DatabaseHandler(getApplicationContext());
         coins = dbHandler.getPortfolio();
@@ -95,12 +106,21 @@ public class PortfolioActivity extends AppCompatActivity implements View.OnClick
                     b1.setTextColor(Color.GREEN);
 
                 }else{
-                    b1.setTextColor(Color.BLACK);
+                    b1.setTextColor(Color.WHITE);
 
                 }
                 b1.setGravity(Gravity.LEFT);
                 b1.setTag(1);
-                LL.addView(b1);
+                b1.setId(i);
+                if(dbHandler.updateData(portfolioNames[i])){
+                    Drawable icon = getApplicationContext().getDrawable(R.drawable.ic_baseline_star_24);
+                    icon.setBounds(0,0,60,60);
+                    b1.setCompoundDrawables(null,null,icon,null);
+                }
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) LL.getLayoutParams();
+                params.setMargins(15,15,15,15);
+                b1.setBackgroundResource(R.drawable.custom_button2);
+                LL.addView(b1,params);
                 b1.setOnClickListener(PortfolioActivity.this);
             }
         }
